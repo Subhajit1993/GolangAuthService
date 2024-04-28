@@ -1,7 +1,7 @@
 package main
 
 import (
-	"Authentication/app/internal/config"
+	"Authentication/internal/config"
 	"flag"
 )
 
