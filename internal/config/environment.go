@@ -6,12 +6,20 @@ import (
 	"os"
 )
 
+func SetDirectoryPath(path string) {
+	err := os.Setenv("root_path", path)
+	if err != nil {
+		return
+	}
+}
+
 func LoadEnvironment(env *string) {
 	envFile := fmt.Sprintf(".env.%s", *env)
 	err := os.Setenv("env", *env)
 	if err != nil {
 		return
 	}
+	envFile = os.Getenv("root_path") + envFile
 	err = godotenv.Load(envFile)
 	if err != nil {
 		fmt.Println("Error loading " + envFile + " file")

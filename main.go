@@ -1,18 +1,19 @@
 package main
 
-import "github.com/gin-gonic/gin"
+import (
+	"Authentication/internal"
+	"Authentication/internal/config"
+	authenticator "Authentication/internal/config/authenticators"
+	"flag"
+)
 
 func main() {
-	r := gin.Default()
-
-	r.GET("/", func(c *gin.Context) {
-		c.JSON(200, gin.H{
-			"message": "Hello, World!",
-		})
-	})
-
-	err := r.Run()
-	if err != nil {
-		return
-	} // listen and serve on 0.0.0.0:8080
+	env := flag.String("env", "development", "environment to run the application in")
+	flag.Parse()
+	config.SetDirectoryPath("")
+	config.LoadEnvironment(env)
+	authenticator.InitAuth0()
+	authenticator.InitWebAuthn()
+	r := internal.RegisterRoutes()
+	r.StartServer()
 }

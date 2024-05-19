@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta content="width=device-width, initial-scale=1" name="viewport">
+    <script src="http://code.jquery.com/jquery-3.1.0.min.js" type="text/javascript"></script>
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <link crossorigin="anonymous" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"
+          integrity="sha512-iBBXm8fW90+nuLcSKlbmrPcLa0OT92xO1BIsZ+ywDWZCvqsWgccV3gFoRBv0z+8dLJgyAHIhR35VZc2oM/gI1w=="
+          referrerpolicy="no-referrer" rel="stylesheet"/>
+    <style>
+        body {
+            background-color: #f8d7da;
+        }
+
+        .card {
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            text-align: center;
+            width: 400px; /* Increased width */
+            margin: 0 auto; /* Center the card horizontally */
+        }
+
+        .profile-pic {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            margin: 0 auto;
+            overflow: hidden;
+        }
+
+        .profile-pic img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .btn-logout {
+            margin-top: 20px;
+        }
+
+        .btn-group {
+            margin-top: 20px;
+        }
+
+        .btn-group .btn {
+            margin-right: 10px; /* Add some margin to the right of each button */
+        }
+
+        .btn-group .btn:last-child {
+            margin-right: 0; /* Remove the right margin from the last button */
+        }
+    </style>
+</head>
+<body>
+<div class="container d-flex justify-content-center align-items-center vh-100">
+    <div class="card">
+        <div class="profile-pic">
+            <img alt="Profile Picture" src="{{.picture}}">
+        </div>
+        <h4 class="mt-3">{{.nickname}}</h4>
+        <p>Email - {{.email}}</p>
+        <p>Name - {{.name}}</p>
+        <p>Provider - {{.sub}}</p>
+        <a class="btn btn-danger btn-logout" href="/dev-tools/logout" id="qsLogoutBtn">Logout</a>
+        <div class="btn-group">
+            <button class="btn btn-primary" onclick="registerNewCredential()">WebAuthn Register</button>
+            <button class="btn btn-success" onclick="authenticateWithCredential()">WebAuthn Login</button>
+        </div>
+    </div>
+</div>
+</body>
+<script>
+    function isWebAuthnSupported() {
+        return window.PublicKeyCredential && window.navigator.credentials;
+    }
+
+    function urlSafeBase64ToBuffer(base64) {
+        base64 = base64.replace(/-/g, '+').replace(/_/g, '/');
+        var binary = atob(base64);
+        var length = binary.length;
+        var buffer = new ArrayBuffer(length);
+        var bytes = new Uint8Array(buffer);
+        for (var i = 0; i < length; i++) {
+            bytes[i] = binary.charCodeAt(i);
+        }
+        return buffer;
+    }
+
+    function stringToArrayBuffer(str) {
+        var encoder = new TextEncoder();
+        var arrayBuffer = encoder.encode(str);
+        return arrayBuffer;
+    }
+
+    function arrayBufferToUrlEncodedBase64(arrayBuffer) {
+        const base64 = btoa(String.fromCharCode.apply(null, new Uint8Array(arrayBuffer)));
+        const base64Url = base64
+            .replace(/\+/g, '-')
+            .replace(/\//g, '_')
+            .replace(/=/g, '');
+        return base64Url;
+    }
+
+    function urlEncodedBase64ToUint8Array(base64Url) {
+        // URL decode the Base64 string
+        base64Url = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+        var padding = '='.repeat((4 - base64Url.length % 4) % 4);
+        base64Url += padding;
+
+        // Convert the Base64 string to a regular string
+        var str = atob(base64Url);
+
+        // Convert the string to a Uint8Array
+        var array = new Uint8Array(str.length);
+        for (var i = 0; i < str.length; i++) {
+            array[i] = str.charCodeAt(i);
+        }
+
+        return array;
+    }
+
+    async function registerNewCredential() {
+        if (!isWebAuthnSupported()) {
+            console.error('WebAuthn is not supported on this browser.');
+            return;
+        }
+
+        const userIdString = 'dXNlci1pZA==';
+        const userId = stringToArrayBuffer(userIdString); // Generate a 16-byte user ID
+        const challenge = urlSafeBase64ToBuffer('23eyBPwe1SPfB9gT0cyYL7ZLnXJcaCuMq3EyDh33Qcg=');
+
+        const options = {
+            publicKey: {
+                "rp": {
+                    "name": "Example Inc.",
+                    "id": "localhost"
+                },
+                "user": {
+                    "name": "subhajitd@plateron.com",
+                    "displayName": "Subhajit Dutta",
+                    "id": userId
+                },
+                "challenge": challenge,
+                "pubKeyCredParams": [
+                    {
+                        "type": "public-key",
+                        "alg": -7
+                    },
+                    {
+                        "type": "public-key",
+                        "alg": -35
+                    },
+                    {
+                        "type": "public-key",
+                        "alg": -36
+                    },
+                    {
+                        "type": "public-key",
+                        "alg": -257
+                    },
+                    {
+                        "type": "public-key",
+                        "alg": -258
+                    },
+                    {
+                        "type": "public-key",
+                        "alg": -259
+                    },
+                    {
+                        "type": "public-key",
+                        "alg": -37
+                    },
+                    {
+                        "type": "public-key",
+                        "alg": -38
+                    },
+                    {
+                        "type": "public-key",
+                        "alg": -39
+                    },
+                    {
+                        "type": "public-key",
+                        "alg": -8
+                    }
+                ],
+                "timeout": 300000,
+                "authenticatorSelection": {
+                    "requireResidentKey": false,
+                    "userVerification": "preferred"
+                }
+            }
+        };
+
+        const credential = await navigator.credentials.create(options);
+        const publicKey = {
+            id: Array.from(new Uint8Array(credential.rawId)),
+            publicKey: Array.from(new Uint8Array(credential.response.attestationObject)),
+        };
+        const publicKeyString = JSON.stringify(publicKey);
+        localStorage.setItem('publicKey', (publicKeyString));
+        await fetch('/dev-tools/passwordless-finish-registration', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                userId: userIdString,
+                response: {
+                    attestationObject: arrayBufferToUrlEncodedBase64(credential.response.attestationObject),
+                    clientDataJSON: arrayBufferToUrlEncodedBase64(credential.response.clientDataJSON),
+                },
+                id: arrayBufferToUrlEncodedBase64(credential.rawId),
+                type: credential.type,
+            }),
+        });
+    }
+
+    async function authenticateWithCredential() {
+        if (!isWebAuthnSupported()) {
+            console.error('WebAuthn is not supported on this browser.');
+            return;
+        }
+
+        const challenge = urlSafeBase64ToBuffer('-Q-8XeA9ig2IhQzVAoxsW-BjeIobiWUm3PyE62gKNyc');
+        const publicKeyUint = urlEncodedBase64ToUint8Array('6WPhSFkbNN4M0l8QbG774cP3Esc');
+        const options = {
+            publicKey: {
+                timeout: 60000, // Timeout in milliseconds
+                challenge: challenge, // Challenge from the server
+                rpId: 'localhost', // The relying party ID
+                allowCredentials: [
+                    {
+                        id: publicKeyUint,
+                        type: 'public-key',
+                    },
+                ],
+                "userVerification": "preferred"
+            },
+        };
+
+        const assertion = await navigator.credentials.get(options);
+        // Send the assertion data to your server for verification
+        console.log(assertion);
+    }
+
+</script>
+
+</html>
