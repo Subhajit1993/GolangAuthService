@@ -5,6 +5,7 @@ import "time"
 type Users struct {
 	ID                 int       `gorm:"primaryKey;column:id" json:"id"`
 	FullName           string    `gorm:"column:name" json:"full_name"`
+	DisplayName        string    `gorm:"column:display_name" json:"display_name"`
 	Email              string    `gorm:"column:email"`
 	Active             bool      `gorm:"column:active"`
 	CreatedAt          time.Time `gorm:"column:created_at"`

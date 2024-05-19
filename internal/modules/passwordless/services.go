@@ -1,4 +1,4 @@
-package openid
+package passwordless
 
 import (
 	authenticator "Authentication/internal/config/authenticators"

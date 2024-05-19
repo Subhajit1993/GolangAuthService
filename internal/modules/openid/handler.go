@@ -62,15 +62,30 @@ func Callback(ctx *gin.Context) {
 		return
 	}
 
-	var profile map[string]interface{}
-	if err := idToken.Claims(&profile); err != nil {
+	var profile Profile
+	var claims map[string]interface{}
+	if err := idToken.Claims(&claims); err != nil {
+		log.Println(err)
 		ctx.String(http.StatusInternalServerError, err.Error())
 		return
 	}
-	log.Println(profile)
+
+	profile.Email = claims["email"].(string)
+	profile.FullName = claims["name"].(string)
+	profile.DisplayName = claims["nickname"].(string)
+	profile.RegistrationSource = claims["sub"].(string)
+	profile.Verified = claims["email_verified"].(bool)
+	profile.Picture = claims["picture"].(string)
+
+	_, err = profile.save()
+	if err != nil {
+		log.Println(err)
+		ctx.String(http.StatusInternalServerError, err.Error())
+		return
+	}
 
 	session.Set("access_token", token.AccessToken)
-	session.Set("profile", profile)
+	session.Set("profile", claims)
 	if err := session.Save(); err != nil {
 		ctx.String(http.StatusInternalServerError, err.Error())
 		return
@@ -82,6 +97,7 @@ func Callback(ctx *gin.Context) {
 func User(ctx *gin.Context) {
 	session := sessions.Default(ctx)
 	profile := session.Get("profile")
+	log.Println(profile)
 
 	ctx.HTML(http.StatusOK, "user.html", profile)
 }
@@ -119,32 +135,4 @@ func Logout(ctx *gin.Context) {
 		return
 	}
 	ctx.Redirect(http.StatusTemporaryRedirect, logoutUrl.String())
-}
-
-func PasswordlessBeginRegistration(ctx *gin.Context) {
-	session := sessions.Default(ctx)
-	profile := session.Get("profile")
-	if profile == nil {
-		ctx.String(http.StatusUnauthorized, "Unauthorized")
-		return
-	}
-	log.Println(profile)
-	var registrationData PasswordlessRegistrationBeginAPIRequest
-	err := ctx.ShouldBindJSON(&registrationData)
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"status": "error", "message": err.Error()})
-		return
-	}
-	webAuthRegData := registrationData.PasswordlessRegistrationBeginAPI()
-	ctx.JSON(http.StatusOK, gin.H{"status": "ok", "data": webAuthRegData})
-}
-
-func PasswordLessFinishRegistration(ctx *gin.Context) {
-	webAuthRegData := authenticator.FinishRegistration(ctx.Request)
-	ctx.JSON(http.StatusOK, gin.H{"status": "ok", "data": webAuthRegData})
-}
-
-func PasswordlessLoginBegin(ctx *gin.Context) {
-	webAuthLoginData := authenticator.BeginLogin()
-	ctx.JSON(http.StatusOK, gin.H{"status": "ok", "data": webAuthLoginData})
 }

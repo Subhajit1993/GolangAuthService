@@ -4,6 +4,7 @@ import (
 	"Authentication/internal"
 	"Authentication/internal/config"
 	authenticator "Authentication/internal/config/authenticators"
+	"Authentication/internal/config/database"
 	"flag"
 )
 
@@ -15,5 +16,9 @@ func main() {
 	authenticator.InitAuth0()
 	authenticator.InitWebAuthn()
 	r := internal.RegisterRoutes()
+	err := database.InitPgDatabase()
+	if err != nil {
+		panic(err.Error())
+	}
 	r.StartServer()
 }

@@ -4,6 +4,7 @@ import (
 	"Authentication/internal/middlewares"
 	"Authentication/internal/modules"
 	"Authentication/internal/modules/openid"
+	"Authentication/internal/modules/passwordless"
 	"encoding/gob"
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-contrib/sessions/cookie"
@@ -30,14 +31,14 @@ func (r GinEngine) addRoutes() GinEngine {
 		devToolsApis.Use(sessions.Sessions("auth-session", store))
 		devToolsApis.GET("/", openid.Home)
 		devToolsApis.GET("/login", openid.Login)
-		devToolsPasswordLessApis := devToolsApis.Group("/passwordless")
-		{
-			devToolsPasswordLessApis.POST("/begin-registration", openid.PasswordlessBeginRegistration)
-			devToolsPasswordLessApis.POST("/finish-registration", openid.PasswordLessFinishRegistration)
-			devToolsPasswordLessApis.POST("/begin-login", openid.PasswordlessLoginBegin)
-		}
 		devToolsApis.GET("/callback", openid.Callback)
 		devToolsApis.GET("/user", middlewares.IsAuthenticatedAuth0, openid.User)
+		devToolsPasswordLessApis := devToolsApis.Group("/passwordless")
+		{
+			devToolsPasswordLessApis.POST("/begin-registration", passwordless.PasswordlessBeginRegistration)
+			devToolsPasswordLessApis.POST("/finish-registration", passwordless.PasswordLessFinishRegistration)
+			devToolsPasswordLessApis.POST("/begin-login", passwordless.PasswordlessLoginBegin)
+		}
 		devToolsApis.GET("/logout", openid.Logout)
 	}
 	return r

@@ -7,6 +7,7 @@
 out
 gen
 .idea_modules
+tmp
 
 
 ### Go template
