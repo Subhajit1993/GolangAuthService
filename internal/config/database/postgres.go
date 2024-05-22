@@ -26,7 +26,7 @@ func InitPgDatabase() error {
 		// AutoMigrate is a variadic function that accepts a list of models and creates tables for them
 		// Reference: https://stackoverflow.com/questions/46654132/go-gorm-db-automigrate
 		PgDB.AutoMigrate(model...)
-		log.Default().Println("Self Database Connected")
+		log.Default().Println("AuthService Database Connected")
 	})
 	return err
 }

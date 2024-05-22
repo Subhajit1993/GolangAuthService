@@ -5,7 +5,7 @@ import (
 	"Authentication/internal/entities"
 )
 
-func (r Profile) save() (*entities.Users, error) {
+func (r Profile) saveData() (*entities.Users, error) {
 
 	user := &entities.Users{
 		Email:              r.Email,
@@ -14,6 +14,7 @@ func (r Profile) save() (*entities.Users, error) {
 		Active:             true,
 		Verified:           r.Verified,
 		RegistrationSource: r.RegistrationSource,
+		Picture:            r.Picture,
 	}
 
 	if err := db.PgDB.Create(user).Error; err != nil {
@@ -22,7 +23,7 @@ func (r Profile) save() (*entities.Users, error) {
 	return user, nil
 }
 
-func (r Profile) find() (*entities.Users, error) {
+func (r Profile) findWithEmail() (*entities.Users, error) {
 	user := &entities.Users{}
 	if err := db.PgDB.Where("email = ?", r.Email).First(user).Error; err != nil {
 		return nil, err

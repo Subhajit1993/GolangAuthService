@@ -71,13 +71,31 @@ func Callback(ctx *gin.Context) {
 	}
 
 	profile.Email = claims["email"].(string)
+
+	existingUser, err := profile.findWithEmail()
+	if err != nil {
+		log.Println(err)
+		ctx.String(http.StatusInternalServerError, err.Error())
+		return
+	}
+	if existingUser != nil {
+		session.Set("access_token", token.AccessToken)
+		session.Set("profile", claims)
+		if err := session.Save(); err != nil {
+			ctx.String(http.StatusInternalServerError, err.Error())
+			return
+		}
+		ctx.Redirect(http.StatusTemporaryRedirect, "/dev-tools/user")
+		return
+	}
+
 	profile.FullName = claims["name"].(string)
 	profile.DisplayName = claims["nickname"].(string)
 	profile.RegistrationSource = claims["sub"].(string)
 	profile.Verified = claims["email_verified"].(bool)
 	profile.Picture = claims["picture"].(string)
 
-	_, err = profile.save()
+	_, err = profile.saveData()
 	if err != nil {
 		log.Println(err)
 		ctx.String(http.StatusInternalServerError, err.Error())

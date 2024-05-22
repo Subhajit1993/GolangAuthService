@@ -12,6 +12,7 @@ type Users struct {
 	UpdatedAt          time.Time `gorm:"column:updated_at"`
 	Verified           bool      `gorm:"column:verified"`
 	RegistrationSource string    `gorm:"column:registration_source"`
+	Picture            string    `gorm:"column:picture"`
 }
 
 func (Users) TableName() string {
