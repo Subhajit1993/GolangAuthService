@@ -62,7 +62,7 @@ func Callback(ctx *gin.Context) {
 		return
 	}
 
-	var profile Profile
+	var profile PublicProfile
 	var claims map[string]interface{}
 	if err := idToken.Claims(&claims); err != nil {
 		log.Println(err)
@@ -71,39 +71,30 @@ func Callback(ctx *gin.Context) {
 	}
 
 	profile.Email = claims["email"].(string)
-
-	existingUser, err := profile.findWithEmail()
-	if err != nil {
-		log.Println(err)
-		ctx.String(http.StatusInternalServerError, err.Error())
-		return
-	}
-	if existingUser != nil {
-		session.Set("access_token", token.AccessToken)
-		session.Set("profile", claims)
-		if err := session.Save(); err != nil {
-			ctx.String(http.StatusInternalServerError, err.Error())
-			return
-		}
-		ctx.Redirect(http.StatusTemporaryRedirect, "/dev-tools/user")
-		return
-	}
-
 	profile.FullName = claims["name"].(string)
 	profile.DisplayName = claims["nickname"].(string)
 	profile.RegistrationSource = claims["sub"].(string)
 	profile.Verified = claims["email_verified"].(bool)
 	profile.Picture = claims["picture"].(string)
 
-	_, err = profile.saveData()
+	user, err := profile.findWithEmail()
+
+	if user == (PublicProfile{}) {
+		user, err = profile.saveData()
+		if err != nil {
+			ctx.String(http.StatusInternalServerError, err.Error())
+			return
+		}
+	}
+
+	jwtToken, err := authenticator.CreateToken(user.ID)
 	if err != nil {
 		log.Println(err)
 		ctx.String(http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	session.Set("access_token", token.AccessToken)
-	session.Set("profile", claims)
+	session.Set("access_token", jwtToken)
 	if err := session.Save(); err != nil {
 		ctx.String(http.StatusInternalServerError, err.Error())
 		return
@@ -113,11 +104,16 @@ func Callback(ctx *gin.Context) {
 }
 
 func User(ctx *gin.Context) {
-	session := sessions.Default(ctx)
-	profile := session.Get("profile")
-	log.Println(profile)
-
-	ctx.HTML(http.StatusOK, "user.html", profile)
+	userIdStr := ctx.MustGet("user_id").(float64)
+	// Convert the user_id to int
+	userIdInt := int(userIdStr)
+	user := PublicProfile{ID: userIdInt}
+	user, err := user.findWithID()
+	if err != nil {
+		ctx.String(http.StatusInternalServerError, err.Error())
+		return
+	}
+	ctx.HTML(http.StatusOK, "user.html", user)
 }
 
 func Home(ctx *gin.Context) {

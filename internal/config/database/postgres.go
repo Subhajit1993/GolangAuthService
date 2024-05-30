@@ -17,7 +17,7 @@ var (
 func InitPgDatabase() error {
 	var err error
 	oncePG.Do(func() {
-		model := []interface{}{&entities.Users{}, &entities.TempUsers{}}
+		model := []interface{}{&entities.Users{}, &entities.TempUsers{}, &entities.Passwordless{}}
 		dsn := "host=" + os.Getenv("SELF_POSTGRES_HOST") + " user=" + os.Getenv("SELF_POSTGRES_USER") + " password=" + os.Getenv("SELF_POSTGRES_PASSWORD") + " dbname=" + os.Getenv("SELF_POSTGRES_DB") + " port=" + os.Getenv("SELF_POSTGRES_PORT") + " sslmode=" + os.Getenv("SELF_SSL")
 		PgDB, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
 		if err != nil {

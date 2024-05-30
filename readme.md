@@ -59,4 +59,8 @@ steps, such as checking that the authenticator is trusted and handling errors.
 
 1. https://github.com/passwordless-id/webauthn?tab=readme-ov-file
 2. https://github.com/go-webauthn/webauthn
-3. 
+
+<h3>TODOs</h3>
+
+1. Refresh token
+2. 

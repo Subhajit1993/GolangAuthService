@@ -32,12 +32,12 @@ func (r GinEngine) addRoutes() GinEngine {
 		devToolsApis.GET("/", openid.Home)
 		devToolsApis.GET("/login", openid.Login)
 		devToolsApis.GET("/callback", openid.Callback)
-		devToolsApis.GET("/user", middlewares.IsAuthenticatedAuth0, openid.User)
+		devToolsApis.GET("/user", middlewares.ValidateJWTToken, openid.User)
 		devToolsPasswordLessApis := devToolsApis.Group("/passwordless")
 		{
-			devToolsPasswordLessApis.POST("/begin-registration", passwordless.PasswordlessBeginRegistration)
-			devToolsPasswordLessApis.POST("/finish-registration", passwordless.PasswordLessFinishRegistration)
-			devToolsPasswordLessApis.POST("/begin-login", passwordless.PasswordlessLoginBegin)
+			devToolsPasswordLessApis.POST("/begin-registration", middlewares.ValidateJWTToken, passwordless.BeginRegistration)
+			devToolsPasswordLessApis.POST("/finish-registration", passwordless.FinishRegistration)
+			devToolsPasswordLessApis.POST("/begin-login", passwordless.LoginBegin)
 		}
 		devToolsApis.GET("/logout", openid.Logout)
 	}

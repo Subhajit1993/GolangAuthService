@@ -1,6 +1,7 @@
 package openid
 
-type Profile struct {
+type PublicProfile struct {
+	ID                 int
 	Email              string `json:"email"`
 	DisplayName        string `json:"nickname"`
 	RegistrationSource string `json:"sub"`
