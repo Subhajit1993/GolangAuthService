@@ -15,7 +15,11 @@ func BeginRegistration(ctx *gin.Context) {
 		return
 	}
 	webAuthRegData := user.PasswordlessRegistrationBeginAPI()
-	webAuthRegData.saveData(user)
+	err = webAuthRegData.saveData(user)
+	if err != nil {
+		ctx.String(http.StatusInternalServerError, err.Error())
+		return
+	}
 	ctx.JSON(http.StatusOK, gin.H{"status": "ok", "data": webAuthRegData})
 }
 

@@ -34,9 +34,9 @@ func ValidateJWTToken(ctx *gin.Context) {
 	}
 	if verifiedToken == nil {
 		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		ctx.Abort()
 		return
 	}
-	// add user_id to context
 	ctx.Set("user_id", verifiedToken.Claims.(jwt.MapClaims)["user_id"])
 	ctx.Next()
 }

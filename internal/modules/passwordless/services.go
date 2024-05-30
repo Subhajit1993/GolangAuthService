@@ -2,8 +2,8 @@ package passwordless
 
 import (
 	authenticator "Authentication/internal/config/authenticators"
+	db "Authentication/internal/config/database"
 	"Authentication/internal/entities"
-	"fmt"
 	"github.com/go-webauthn/webauthn/protocol"
 )
 
@@ -19,10 +19,23 @@ func (request PublicProfile) PasswordlessRegistrationBeginAPI() WebAuthNCredenti
 	return WebAuthNCredentialCreation(*webAuthRegData)
 }
 
-func (request WebAuthNCredentialCreation) saveData(profile PublicProfile) {
+func (request WebAuthNCredentialCreation) saveData(profile PublicProfile) error {
+	userHandleString := ((request.Response.User.ID.(interface{})).(protocol.URLEncodedBase64)).String()
 	passwordless := &entities.Passwordless{
-		UserId:    profile.ID,
-		Challenge: string(request.Response.Challenge),
+		UserId:          profile.ID,
+		UserHandle:      userHandleString,
+		RPID:            request.Response.RelyingParty.ID,
+		Challenge:       request.Response.Challenge.String(),
+		CredentialType:  "platform",
+		Counter:         0,
+		AttestationData: string(request.Response.Attestation),
 	}
-	fmt.Println(passwordless)
+	err := passwordless.Validate()
+	if err != nil {
+		return err
+	}
+	if err := db.PgDB.Create(passwordless).Error; err != nil {
+		return err
+	}
+	return nil
 }
