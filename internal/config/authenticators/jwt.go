@@ -22,9 +22,35 @@ func CreateToken(userId int) (string, error) {
 	return token, nil
 }
 
+func CreateRefreshToken(userId int, expInHr int) (string, time.Time, error) {
+	var err error
+	//Creating Refresh Token
+	expInHrDuration := time.Duration(expInHr)
+	expTime := time.Now().Add(time.Hour * expInHrDuration)
+	rtClaims := jwt.MapClaims{}
+	rtClaims["user_id"] = userId
+	rtClaims["exp"] = expTime.Unix()
+	rt := jwt.NewWithClaims(jwt.SigningMethodHS256, rtClaims)
+	refreshToken, err := rt.SignedString([]byte(os.Getenv("JWT_SECRET")))
+	if err != nil {
+		return "", time.Time{}, err
+	}
+	return refreshToken, expTime, nil
+}
+
 // Function to validate a JWT token
 
 func ValidateToken(tokenString string) (*jwt.Token, error) {
+	token, err := jwt.ParseWithClaims(tokenString, jwt.MapClaims{}, func(token *jwt.Token) (interface{}, error) {
+		return []byte(os.Getenv("JWT_SECRET")), nil
+	})
+	if err != nil {
+		return nil, err
+	}
+	return token, nil
+}
+
+func ValidateRefreshToken(tokenString string) (*jwt.Token, error) {
 	token, err := jwt.ParseWithClaims(tokenString, jwt.MapClaims{}, func(token *jwt.Token) (interface{}, error) {
 		return []byte(os.Getenv("JWT_SECRET")), nil
 	})

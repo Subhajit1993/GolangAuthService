@@ -3,11 +3,12 @@ package openid
 import (
 	db "Authentication/internal/config/database"
 	"Authentication/internal/entities"
+	"time"
 )
 
-func (r PublicProfile) findWithID() (PublicProfile, error) {
+func (p PublicProfile) findWithID() (PublicProfile, error) {
 	user := &entities.Users{}
-	if err := db.PgDB.Where("id = ?", r.ID).First(user).Error; err != nil {
+	if err := db.PgDB.Where("id = ?", p.ID).First(user).Error; err != nil {
 		return PublicProfile{}, err
 	}
 	return PublicProfile{
@@ -19,9 +20,9 @@ func (r PublicProfile) findWithID() (PublicProfile, error) {
 	}, nil
 }
 
-func (r PublicProfile) findWithEmail() (PublicProfile, error) {
+func (p PublicProfile) findWithEmail() (PublicProfile, error) {
 	user := &entities.Users{}
-	if err := db.PgDB.Where("email = ?", r.Email).First(user).Error; err != nil {
+	if err := db.PgDB.Where("email = ?", p.Email).First(user).Error; err != nil {
 		return PublicProfile{}, err
 	}
 	return PublicProfile{
@@ -34,16 +35,16 @@ func (r PublicProfile) findWithEmail() (PublicProfile, error) {
 
 }
 
-func (r PublicProfile) saveData() (PublicProfile, error) {
+func (p PublicProfile) saveData() (PublicProfile, error) {
 
 	user := &entities.Users{
-		Email:              r.Email,
-		FullName:           r.FullName,
-		DisplayName:        r.DisplayName,
+		Email:              p.Email,
+		FullName:           p.FullName,
+		DisplayName:        p.DisplayName,
 		Active:             true,
-		Verified:           r.Verified,
-		RegistrationSource: r.RegistrationSource,
-		Picture:            r.Picture,
+		Verified:           p.Verified,
+		RegistrationSource: p.RegistrationSource,
+		Picture:            p.Picture,
 	}
 
 	if err := db.PgDB.Create(user).Error; err != nil {
@@ -56,4 +57,16 @@ func (r PublicProfile) saveData() (PublicProfile, error) {
 		DisplayName: user.DisplayName,
 		Picture:     user.Picture,
 	}, nil
+}
+
+func (p PublicProfile) saveRefreshToken(refreshToken string, expiredAt time.Time) error {
+	tokenToSave := &entities.RefreshTokens{
+		UserId:       p.ID,
+		RefreshToken: refreshToken,
+		ExpiredAt:    expiredAt,
+	}
+	if err := db.PgDB.Create(tokenToSave).Error; err != nil {
+		return err
+	}
+	return nil
 }

@@ -6,6 +6,7 @@ import (
 	"encoding/base64"
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
+	"github.com/golang-jwt/jwt/v5"
 	"log"
 	"net/http"
 	"net/url"
@@ -81,13 +82,16 @@ func Callback(ctx *gin.Context) {
 
 	if user == (PublicProfile{}) {
 		user, err = profile.saveData()
-		if err != nil {
-			ctx.String(http.StatusInternalServerError, err.Error())
-			return
-		}
+	}
+
+	if err != nil {
+		ctx.String(http.StatusInternalServerError, err.Error())
+		return
 	}
 
 	jwtToken, err := authenticator.CreateToken(user.ID)
+	refreshToken, expiry, err := authenticator.CreateRefreshToken(user.ID, 48)
+	err = user.saveRefreshToken(refreshToken, expiry)
 	if err != nil {
 		log.Println(err)
 		ctx.String(http.StatusInternalServerError, err.Error())
@@ -95,6 +99,7 @@ func Callback(ctx *gin.Context) {
 	}
 
 	session.Set("access_token", jwtToken)
+	session.Set("refresh_token", refreshToken)
 	if err := session.Save(); err != nil {
 		ctx.String(http.StatusInternalServerError, err.Error())
 		return
@@ -149,4 +154,31 @@ func Logout(ctx *gin.Context) {
 		return
 	}
 	ctx.Redirect(http.StatusTemporaryRedirect, logoutUrl.String())
+}
+
+func GetAccessTokenRefreshToken(ctx *gin.Context) {
+	session := sessions.Default(ctx)
+	refreshToken := session.Get("refresh_token")
+	if refreshToken == nil {
+		ctx.String(http.StatusUnauthorized, "No refresh token found")
+		return
+	}
+
+	verifiedToken, err := authenticator.ValidateRefreshToken(refreshToken.(string))
+	if err != nil {
+		ctx.String(http.StatusUnauthorized, err.Error())
+		return
+	}
+	userID := verifiedToken.Claims.(jwt.MapClaims)["user_id"].(float64)
+	jwtToken, err := authenticator.CreateToken(int(userID))
+	if err != nil {
+		ctx.String(http.StatusInternalServerError, err.Error())
+		return
+	}
+	session.Set("access_token", jwtToken)
+	if err := session.Save(); err != nil {
+		ctx.String(http.StatusInternalServerError, err.Error())
+		return
+	}
+	ctx.JSON(http.StatusOK, gin.H{"access_token": jwtToken})
 }

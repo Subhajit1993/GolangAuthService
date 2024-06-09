@@ -52,11 +52,11 @@ func InitWebAuthn() {
 	}
 }
 
-func BeginRegistration(u User) *protocol.CredentialCreation {
+func BeginRegistration(u User) (*protocol.CredentialCreation, *webauthn.SessionData, error) {
 	user := &u
 	options, session, err := webAuthn.BeginRegistration(user)
 	if err != nil {
-		return nil
+		return nil, nil, err
 	}
 	// Store sessionData somewhere, e.g. in the user's session
 	// You'll need this in the next step of the registration process
@@ -64,16 +64,16 @@ func BeginRegistration(u User) *protocol.CredentialCreation {
 	sessionDataJSON, err := json.Marshal(session)
 	err = os.WriteFile("sessionData", sessionDataJSON, 0644)
 	if err != nil {
-		return nil
+		return nil, nil, err
 	}
-	return options
+	return options, session, nil
 }
 
 type CreationResponses protocol.CredentialCreationResponse
 
-func FinishRegistration(r *http.Request) bool {
+func FinishRegistration(r *http.Request, sessionData *webauthn.SessionData, webAuthNUser *User) *webauthn.Credential {
 	// Read the session data from the file
-	sessionDataJSON, err := os.ReadFile("sessionData")
+	/*sessionDataJSON, err := os.ReadFile("sessionData")
 	if err != nil {
 		log.Println("Failed to read session data:", err)
 		return false
@@ -86,26 +86,26 @@ func FinishRegistration(r *http.Request) bool {
 	}
 
 	// Create a user
-	user := &User{Id: []byte("user-id"), Name: "subhajitd@plateron.com", DisplayName: "Subhajit Dutta"}
-	credential, err := webAuthn.FinishRegistration(user, *session, r)
+	//user := &User{Id: []byte("user-id"), Name: "subhajitd@plateron.com", DisplayName: "Subhajit Dutta"}*/
+	credential, err := webAuthn.FinishRegistration(webAuthNUser, *sessionData, r)
 	if err != nil {
 		log.Println("Failed to finish registration:", err)
-		return false
+		return nil
 	}
 
 	// Write the credential data to a file
 	credentialJSON, err := json.Marshal(credential)
 	if err != nil {
 		log.Println("Failed to encode credential data:", err)
-		return false
+		return nil
 	}
 	err = os.WriteFile("credential", credentialJSON, 0644)
 	if err != nil {
 		log.Println("Failed to write credential data:", err)
-		return false
+		return nil
 	}
 
-	return true
+	return credential
 }
 
 func BeginLogin() *protocol.CredentialAssertion {

@@ -82,9 +82,9 @@
             return;
         }
 
-        const userIdString = 'dXNlci1pZA==';
+        const userIdString = 'NQ==';
         const userId = stringToArrayBuffer(userIdString); // Generate a 16-byte user ID
-        const challenge = urlSafeBase64ToBuffer('23eyBPwe1SPfB9gT0cyYL7ZLnXJcaCuMq3EyDh33Qcg=');
+        const challenge = urlSafeBase64ToBuffer('m7wdbQMw-DqWWwtZ8o1b6u2lDpCBG20YBRl7J0ctWQw');
 
         const options = {
             publicKey: {
@@ -93,8 +93,8 @@
                     "id": "localhost"
                 },
                 "user": {
-                    "name": "subhajitd@plateron.com",
-                    "displayName": "Subhajit Dutta",
+                    "name": "Subhajit Dutta",
+                    "displayName": "Subhajit1993",
                     "id": userId
                 },
                 "challenge": challenge,
@@ -155,7 +155,7 @@
         };
         const publicKeyString = JSON.stringify(publicKey);
         localStorage.setItem('publicKey', (publicKeyString));
-        await fetch('/dev-tools/passwordless-finish-registration', {
+        await fetch('/dev-tools/passwordless/finish-registration', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
