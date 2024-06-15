@@ -5,14 +5,13 @@ import (
 	"Authentication/internal/config"
 	authenticator "Authentication/internal/config/authenticators"
 	"Authentication/internal/config/database"
-	"flag"
 )
 
 func main() {
-	env := flag.String("env", "development", "environment to run the application in")
-	flag.Parse()
-	config.SetDirectoryPath("")
-	config.LoadEnvironment(env)
+	//env := flag.String("env", "development", "environment to run the application in")
+	//flag.Parse()
+	//config.SetDirectoryPath("")
+	config.LoadEnvironment()
 	authenticator.InitAuth0()
 	authenticator.InitWebAuthn()
 	r := internal.RegisterRoutes()

@@ -1,9 +1,0 @@
--- Build container with Tag
-docker build -t  go_auth_service .
-
--- Tag with Dockerhub username
-docker tag go_auth_service subhajit1993/go_auth_service:v1
-
--- Push to Dockerhub
-docker push subhajit1993/go_auth_service:v1
-

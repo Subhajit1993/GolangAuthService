@@ -13,9 +13,11 @@ func SetDirectoryPath(path string) {
 	}
 }
 
-func LoadEnvironment(env *string) {
-	envFile := fmt.Sprintf(".env.%s", *env)
-	err := os.Setenv("env", *env)
+func LoadEnvironment() {
+	env := os.Getenv("GOENV")
+	envFile := fmt.Sprintf(".env.%s", env)
+	err := os.Setenv("env", env)
+	fmt.Println("Environment: ", env)
 	if err != nil {
 		return
 	}
