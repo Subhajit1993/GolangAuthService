@@ -1,10 +1,12 @@
-package internal
+package pkg
 
 import (
-	"Authentication/internal/middlewares"
-	"Authentication/internal/modules"
-	"Authentication/internal/modules/openid"
-	"Authentication/internal/modules/passwordless"
+	"Authentication/pkg/middlewares"
+	"Authentication/pkg/modules"
+	"Authentication/pkg/modules/general"
+	"Authentication/pkg/modules/internal_apis"
+	"Authentication/pkg/modules/openid"
+	"Authentication/pkg/modules/passwordless"
 	"encoding/gob"
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-contrib/sessions/cookie"
@@ -26,13 +28,15 @@ func (r GinEngine) addRoutes() GinEngine {
 	store := cookie.NewStore([]byte("secret"))
 
 	r.GET("/", modules.HealthCheck)
-	devToolsApis := r.Group("/dev-tools")
+	r.Use(sessions.Sessions("auth-session", store))
+	r.GET("/refresh-access-token", openid.GetAccessTokenRefreshToken)
+	r.POST("/email/login", general.Login)
+	r.GET("/logout", openid.Logout)
+	devToolsApis := r.Group("/openid")
 	{
-		devToolsApis.Use(sessions.Sessions("auth-session", store))
 		devToolsApis.GET("/", openid.Home)
 		devToolsApis.GET("/login", openid.Login)
 		devToolsApis.GET("/callback", openid.Callback)
-		devToolsApis.GET("/generate-access-token", openid.GetAccessTokenRefreshToken)
 		devToolsApis.GET("/user", middlewares.ValidateJWTToken, openid.User)
 		devToolsPasswordLessApis := devToolsApis.Group("/passwordless")
 		{
@@ -40,7 +44,10 @@ func (r GinEngine) addRoutes() GinEngine {
 			devToolsPasswordLessApis.POST("/finish-registration", middlewares.ValidateJWTToken, passwordless.FinishRegistration)
 			devToolsPasswordLessApis.POST("/begin-login", passwordless.LoginBegin)
 		}
-		devToolsApis.GET("/logout", openid.Logout)
+	}
+	internalApis := r.Group("/internal")
+	{
+		internalApis.GET("/validate/auth", internal_apis.ValidateAuth)
 	}
 	return r
 }

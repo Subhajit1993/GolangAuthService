@@ -1,8 +1,8 @@
 package passwordless
 
 import (
-	db "Authentication/internal/config/database"
-	"Authentication/internal/entities"
+	db "Authentication/pkg/config/database"
+	"Authentication/pkg/entities"
 	"os"
 )
 
@@ -21,7 +21,7 @@ func (request PublicProfile) findWithID() (PublicProfile, error) {
 }
 
 func (request passwordlessRegistration) getPasswordlessRegistrationData() (passwordlessRegistration, error) {
-	sqlFile, err := os.ReadFile("internal/sql/queries/passwordless/get_registration_data.sql")
+	sqlFile, err := os.ReadFile("pkg/sql/queries/passwordless/get_registration_data.sql")
 	if err != nil {
 		return passwordlessRegistration{}, err
 	}

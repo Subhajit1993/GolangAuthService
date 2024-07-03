@@ -1,7 +1,7 @@
 package passwordless
 
 import (
-	authenticator "Authentication/internal/config/authenticators"
+	authenticator "Authentication/pkg/config/authenticators"
 	"github.com/gin-gonic/gin"
 	"github.com/go-webauthn/webauthn/webauthn"
 	"net/http"

@@ -1,9 +1,9 @@
 package passwordless
 
 import (
-	authenticator "Authentication/internal/config/authenticators"
-	db "Authentication/internal/config/database"
-	"Authentication/internal/entities"
+	authenticator "Authentication/pkg/config/authenticators"
+	db "Authentication/pkg/config/database"
+	"Authentication/pkg/entities"
 	"encoding/json"
 	"github.com/go-webauthn/webauthn/protocol"
 	"github.com/go-webauthn/webauthn/webauthn"

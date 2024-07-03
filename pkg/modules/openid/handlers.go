@@ -1,7 +1,7 @@
 package openid
 
 import (
-	authenticator "Authentication/internal/config/authenticators"
+	authenticator "Authentication/pkg/config/authenticators"
 	"crypto/rand"
 	"encoding/base64"
 	"github.com/gin-contrib/sessions"

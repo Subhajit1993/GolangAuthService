@@ -1,8 +1,8 @@
 package openid
 
 import (
-	db "Authentication/internal/config/database"
-	"Authentication/internal/entities"
+	db "Authentication/pkg/config/database"
+	"Authentication/pkg/entities"
 	"time"
 )
 
@@ -32,7 +32,6 @@ func (p PublicProfile) findWithEmail() (PublicProfile, error) {
 		DisplayName: user.DisplayName,
 		Picture:     user.Picture,
 	}, nil
-
 }
 
 func (p PublicProfile) saveData() (PublicProfile, error) {

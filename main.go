@@ -1,10 +1,10 @@
 package main
 
 import (
-	"Authentication/internal"
-	"Authentication/internal/config"
-	authenticator "Authentication/internal/config/authenticators"
-	"Authentication/internal/config/database"
+	"Authentication/pkg"
+	"Authentication/pkg/config"
+	authenticator "Authentication/pkg/config/authenticators"
+	"Authentication/pkg/config/database"
 )
 
 func main() {
@@ -14,7 +14,7 @@ func main() {
 	config.LoadEnvironment()
 	authenticator.InitAuth0()
 	authenticator.InitWebAuthn()
-	r := internal.RegisterRoutes()
+	r := pkg.RegisterRoutes()
 	err := database.InitPgDatabase()
 	if err != nil {
 		panic(err.Error())

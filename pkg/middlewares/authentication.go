@@ -1,7 +1,7 @@
 package middlewares
 
 import (
-	authenticator "Authentication/internal/config/authenticators"
+	authenticator "Authentication/pkg/config/authenticators"
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"

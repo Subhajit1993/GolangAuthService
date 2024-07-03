@@ -1,7 +1,7 @@
 package database
 
 import (
-	"Authentication/internal/entities"
+	"Authentication/pkg/entities"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"log"
@@ -19,6 +19,7 @@ func InitPgDatabase() error {
 	oncePG.Do(func() {
 		model := []interface{}{&entities.Users{}, &entities.Passwordless{}, &entities.RefreshTokens{}}
 		dsn := "host=" + os.Getenv("SELF_POSTGRES_HOST") + " user=" + os.Getenv("SELF_POSTGRES_USER") + " password=" + os.Getenv("SELF_POSTGRES_PASSWORD") + " dbname=" + os.Getenv("SELF_POSTGRES_DB") + " port=" + os.Getenv("SELF_POSTGRES_PORT") + " sslmode=" + os.Getenv("SELF_SSL")
+		log.Default().Println(dsn)
 		PgDB, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
 		if err != nil {
 			return
