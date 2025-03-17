@@ -1,0 +1,51 @@
+name: "CodeQL Analysis"
+
+on:
+  pull_request:
+    branches: [ main, master ]  # Run on PRs targeting main branches
+  schedule:
+    - cron: '0 0 * * 0'  # Run once a week for full scans
+
+jobs:
+  analyze:
+    name: Analyze
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+      security-events: write  # Required for uploading SARIF results
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0  # Full git history for better change detection
+
+      # Setup Go environment
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.21'  # Specify your project's Go version
+          cache: true
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: go
+          queries: security-extended,security-and-quality  # Extended query suite
+          config-file: ./.github/codeql/codeql-config.yml  # Optional custom config
+
+      # The autobuild step will automatically attempt to build Go projects
+      - name: Autobuild
+        uses: github/codeql-action/autobuild@v3
+
+      # Alternative to autobuild - uncomment if you need custom build steps
+      # - name: Manual Build
+      #   run: |
+      #     # Add your custom Go build commands here if needed
+      #     # Example: go build ./...
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: "/language:go"
