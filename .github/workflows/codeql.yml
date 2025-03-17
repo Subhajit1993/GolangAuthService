@@ -38,10 +38,9 @@ jobs:
           config-file: ./.github/codeql/codeql-config.yml
           debug: true  # Enable debug output
 
-      - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@v3
-        with:
-          category: "/language:go"
+      - name: Put CodeQL on the path
+        run: |
+          echo "${{ steps.init.outputs.codeql-path }}" >> $GITHUB_PATH
 
       - name: Run Custom Query
         run: |
@@ -51,6 +50,11 @@ jobs:
           echo "where f.getNumberOfParameters() > 3" >> custom-query.ql
           echo "select f, \"This function has more than 3 parameters.\"" >> custom-query.ql
           codeql database analyze --format=sarif-latest --output=results.sarif . custom-query.ql
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: "/language:go"
 
   # Report Generation
   report:
