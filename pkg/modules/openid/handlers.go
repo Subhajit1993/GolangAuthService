@@ -165,10 +165,10 @@ func GetAccessTokenRefreshToken(ctx *gin.Context) {
 	}
 
 	verifiedToken, err := authenticator.ValidateRefreshToken(refreshToken.(string))
-	if err != nil {
-		ctx.String(http.StatusUnauthorized, err.Error())
-		return
-	}
+	//if err != nil {
+	//	ctx.String(http.StatusUnauthorized, err.Error())
+	//	return
+	//}
 	userID := verifiedToken.Claims.(jwt.MapClaims)["user_id"].(float64)
 	jwtToken, err := authenticator.CreateToken(int(userID))
 	if err != nil {

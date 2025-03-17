@@ -26,9 +26,6 @@ func setupGin() GinEngine {
 func (r GinEngine) addRoutes() GinEngine {
 	gob.Register(map[string]interface{}{})
 	store := cookie.NewStore([]byte("secret"))
-
-	hello := "asdasd"
-
 	r.GET("/", modules.HealthCheck)
 	r.GET("/health", modules.HealthCheck)
 	r.Use(sessions.Sessions("auth-session", store))
