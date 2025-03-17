@@ -11,6 +11,7 @@
 
 import go
 
-from FuncDecl f
+// Find all functions and methods with more than 3 parameters
+from Function f
 where f.getNumParameter() > 3
 select f, "Function " + f.getName() + " has " + f.getNumParameter().toString() + " parameters, which exceeds the maximum of 3."

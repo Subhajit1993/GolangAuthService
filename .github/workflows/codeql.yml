@@ -36,6 +36,7 @@ jobs:
           languages: go
           build-mode: autobuild
           config-file: ./.github/codeql/codeql-config.yml
+          debug: true  # Enable debug output
 
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v3
