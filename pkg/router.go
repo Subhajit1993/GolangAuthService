@@ -37,6 +37,7 @@ func (r GinEngine) addRoutes() GinEngine {
 	{
 		devToolsApis.GET("/", openid.Home)
 		devToolsApis.GET("/login", openid.Login)
+		devToolsApis.GET("/login", openid.Login)
 		devToolsApis.GET("/callback", openid.Callback)
 		devToolsApis.GET("/user", middlewares.ValidateJWTToken, openid.User)
 		devToolsPasswordLessApis := devToolsApis.Group("/passwordless")
