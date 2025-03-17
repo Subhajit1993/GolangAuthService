@@ -32,6 +32,7 @@ func (r GinEngine) addRoutes() GinEngine {
 	r.Use(sessions.Sessions("auth-session", store))
 	r.GET("/refresh-access-token", openid.GetAccessTokenRefreshToken)
 	r.POST("/email/login", general.Login)
+	r.POST("/email/login", general.Login)
 	r.GET("/logout", openid.Logout)
 	devToolsApis := r.Group("/dev-tools")
 	{
