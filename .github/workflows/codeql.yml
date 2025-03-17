@@ -1,10 +1,10 @@
-name: "Go Code Quality & Security Analysis with CodeQL and golangci-lint"
+name: "Go Code Quality & Security Analysis with CodeQL"
 
 on:
   push:
-    branches: [ "master", "main", "develop" ]
+    branches: [ "master", "main" ]
   pull_request:
-    branches: [ "master", "main", "develop" ]
+    branches: [ "master", "main" ]
   schedule:
     - cron: '29 14 * * 4'  # Weekly on Thursdays
 
@@ -35,7 +35,7 @@ jobs:
         with:
           languages: go
           build-mode: autobuild
-          queries: security-extended,security-and-quality
+          config-file: ./.github/codeql/codeql-config.yml
 
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v3
@@ -73,13 +73,9 @@ jobs:
           
           echo "## Recommendations" >> reports/go-analysis-summary.md
           echo "- Review any failed jobs and address identified issues" >> reports/go-analysis-summary.md
-          echo "- Check coverage reports to ensure adequate test coverage" >> reports/go-analysis-summary.md
-          echo "- Address security concerns identified by Gosec and CodeQL" >> reports/go-analysis-summary.md
-          echo "- Review golangci-lint warnings and fix the following common issues:" >> reports/go-analysis-summary.md
-          echo "  - Unchecked error return values (errcheck)" >> reports/go-analysis-summary.md
-          echo "  - Redundant code (gosimple)" >> reports/go-analysis-summary.md
-          echo "  - Ineffectual assignments (ineffassign)" >> reports/go-analysis-summary.md
-          echo "  - Unused error values (staticcheck)" >> reports/go-analysis-summary.md
+          echo "- Address security concerns identified by CodeQL" >> reports/go-analysis-summary.md
+          echo "- Refactor functions with more than 3 parameters to improve code maintainability" >> reports/go-analysis-summary.md
+          echo "- Consider using structs to group related parameters for complex functions" >> reports/go-analysis-summary.md
 
       - name: Archive reports
         uses: actions/upload-artifact@v4
