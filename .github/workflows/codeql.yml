@@ -1,8 +1,10 @@
 name: "Go Code Quality & Security Analysis"
 
 on:
+  push:
+    branches: [ "master", "main", "develop" ]
   pull_request:
-    branches: [ "master" ]
+    branches: [ "master", "main", "develop" ]
   schedule:
     - cron: '29 14 * * 4'  # Weekly on Thursdays
 
@@ -73,7 +75,7 @@ jobs:
           go test -race -coverprofile=coverage.txt -covermode=atomic ./...
 
       - name: Upload coverage report
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: code-coverage-report
           path: coverage.txt
@@ -152,7 +154,7 @@ jobs:
           echo "- Address security concerns identified by Gosec and CodeQL" >> reports/go-analysis-summary.md
 
       - name: Archive reports
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: go-analysis-reports
           path: reports/
