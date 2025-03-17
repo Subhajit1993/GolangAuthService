@@ -61,6 +61,6 @@ func LoginBegin(ctx *gin.Context) {
 }
 
 func LoginBeginNew(ctx *gin.Context) {
-	webAuthLoginData := authenticator.BeginLogin()
+	webAuthLoginData := authenticator.BeginLogin("Hello")
 	ctx.JSON(http.StatusOK, gin.H{"status": "ok", "data": webAuthLoginData})
 }
