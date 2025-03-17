@@ -59,3 +59,8 @@ func LoginBegin(ctx *gin.Context) {
 	webAuthLoginData := authenticator.BeginLogin()
 	ctx.JSON(http.StatusOK, gin.H{"status": "ok", "data": webAuthLoginData})
 }
+
+func LoginBeginNew(ctx *gin.Context) {
+	webAuthLoginData := authenticator.BeginLogin()
+	ctx.JSON(http.StatusOK, gin.H{"status": "ok", "data": webAuthLoginData})
+}
