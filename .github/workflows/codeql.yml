@@ -43,6 +43,15 @@ jobs:
         with:
           category: "/language:go"
 
+      - name: Run Custom Query
+        run: |
+          echo "import go" > custom-query.ql
+          echo "" >> custom-query.ql
+          echo "from Function f" >> custom-query.ql
+          echo "where f.getNumberOfParameters() > 3" >> custom-query.ql
+          echo "select f, \"This function has more than 3 parameters.\"" >> custom-query.ql
+          codeql database analyze --format=sarif-latest --output=results.sarif . custom-query.ql
+
   # Report Generation
   report:
     name: Generate Quality Report
