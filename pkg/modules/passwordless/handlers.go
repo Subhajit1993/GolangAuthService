@@ -55,11 +55,13 @@ func FinishRegistration(ctx *gin.Context) {
 	return
 }
 
+// LoginBegin initiates the passwordless login process by obtaining login data from the authenticator package and returning it in a JSON response with an "ok" status.
 func LoginBegin(ctx *gin.Context) {
 	webAuthLoginData := authenticator.BeginLogin()
 	ctx.JSON(http.StatusOK, gin.H{"status": "ok", "data": webAuthLoginData})
 }
 
+// LoginBeginNew initiates a passwordless login process using a custom parameter. It calls authenticator.BeginLogin with "Hello" and responds with an HTTP 200 OK JSON object containing the login data.
 func LoginBeginNew(ctx *gin.Context) {
 	webAuthLoginData := authenticator.BeginLogin("Hello")
 	ctx.JSON(http.StatusOK, gin.H{"status": "ok", "data": webAuthLoginData})
