@@ -1,0 +1,31 @@
+name: "Custom CodeQL Configuration"
+
+queries:
+  - uses: security-extended
+  - uses: security-and-quality
+
+# Customize paths to include or exclude from analysis
+paths:
+  - src
+  - cmd
+  - pkg
+  - internal
+paths-ignore:
+  - '**/vendor/**'
+  - '**/testdata/**'
+  - '**/*_test.go'  # Exclude test files
+  - '**/mocks/**'   # Exclude mock files
+  - '**/docs/**'    # Exclude documentation
+
+# Disable default queries that might be too noisy
+disable-default-queries: false
+
+# Additional query packs for Go-specific security checks
+query-filters:
+  - exclude:
+      id: go/log-injection  # Example of excluding a specific query if too noisy
+
+# Additional configurations for Go analysis
+packs:
+  # Include additional query packs as needed
+  - codeql/go-queries
