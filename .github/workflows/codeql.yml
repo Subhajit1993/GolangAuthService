@@ -25,6 +25,22 @@ jobs:
         with:
           go-version: '1.21'
 
+      # Create a minimal golangci config just for the function params rule
+      - name: Create golangci-lint config
+        run: |
+          cat > .golangci.yml << 'EOL'
+          linters:
+            enable:
+              - revive
+          
+          linters-settings:
+            revive:
+              rules:
+                - name: argument-limit
+                  severity: error
+                  arguments: [3]
+          EOL
+
       - name: Run reviewdog
         uses: reviewdog/action-golangci-lint@v2
         with:
@@ -35,6 +51,7 @@ jobs:
           fail-on-error: true
           # Skip config file - use default settings
           go_version: "1.21"
+          golangci-lint-flags: "--config=.golangci.yml"
 
   # CodeQL Security Analysis for Go
   codeql-analyze:
@@ -86,12 +103,17 @@ jobs:
           echo "- CodeQL Analysis: ${{ needs.codeql-analyze.result }}" >> report.md
           echo "- Linting Analysis: ${{ needs.reviewdog.result }}" >> report.md
           
+          echo "## Function Parameter Limit" >> report.md
+          echo "- Functions with more than 3 parameters will be flagged" >> report.md
+          echo "- Consider using structs to group related parameters" >> report.md
+          
           echo "## Linting Comments" >> report.md
           echo "- Check the 'Files changed' tab to see detailed linting comments" >> report.md
           
           echo "## Recommendations" >> report.md
           echo "- Review any failed jobs and address identified issues" >> report.md
           echo "- Address security concerns identified by CodeQL" >> report.md
+          echo "- Refactor functions with more than 3 parameters to improve code maintainability" >> report.md
 
       # Add summary as PR comment
       - name: Comment on PR
