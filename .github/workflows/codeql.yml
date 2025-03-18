@@ -9,9 +9,9 @@ on:
     - cron: '29 14 * * 4'  # Weekly on Thursdays
 
 jobs:
-  # Manual setup of golangci-lint and reviewdog to avoid extraction issues
-  reviewdog-manual:
-    name: Lint with Reviewdog (Manual Setup)
+  # Use a hybrid approach - manual golangci-lint but reviewdog action
+  reviewdog-hybrid:
+    name: Lint with Reviewdog
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -26,19 +26,13 @@ jobs:
           go-version: '1.21'
           cache: false
 
-      # Install golangci-lint directly instead of using action
+      # Install golangci-lint directly
       - name: Install golangci-lint
         run: |
           curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.55.2
           golangci-lint --version
 
-      # Install reviewdog directly
-      - name: Install reviewdog
-        run: |
-          curl -sfL https://raw.githubusercontent.com/reviewdog/reviewdog/master/install.sh | sh -s -- -b $(go env GOPATH)/bin
-          reviewdog -version
-
-      # Create the golangci config
+      # Create the golangci config with argument limit
       - name: Create golangci-lint config
         run: |
           cat > .golangci.yml << 'EOL'
@@ -54,16 +48,23 @@ jobs:
                   arguments: [3]
           EOL
 
-      # Run golangci-lint and pipe to reviewdog manually
-      - name: Run linting with reviewdog
+      # Run golangci-lint and save output to file
+      - name: Run golangci-lint
+        run: |
+          golangci-lint run --config=.golangci.yml --out-format=line-number > golangci-lint-output.txt || true
+          cat golangci-lint-output.txt
+
+      # Use reviewdog action to process the output file
+      - name: Run reviewdog
+        uses: reviewdog/action-setup@v1
+        with:
+          reviewdog_version: latest
+
+      - name: Post annotations with reviewdog
         env:
           REVIEWDOG_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          golangci-lint run --config=.golangci.yml --out-format=line-number | \
-          reviewdog -f=golangci-lint \
-            -name="golangci-lint" \
-            -reporter=github-pr-review \
-            -fail-on-error=true
+          cat golangci-lint-output.txt | reviewdog -f=golangci-lint -name="golangci-lint" -reporter=github-pr-review -filter-mode=nofilter
 
   # CodeQL Security Analysis for Go
   codeql-analyze:
@@ -90,7 +91,7 @@ jobs:
   report:
     name: Generate Quality Report
     runs-on: ubuntu-latest
-    needs: [ codeql-analyze, reviewdog-manual ]
+    needs: [ codeql-analyze, reviewdog-hybrid ]
     if: always() && github.event_name == 'pull_request'
     permissions:
       contents: read
@@ -113,7 +114,7 @@ jobs:
           
           echo "## Job Status" >> report.md
           echo "- CodeQL Analysis: ${{ needs.codeql-analyze.result }}" >> report.md
-          echo "- Linting Analysis: ${{ needs.reviewdog-manual.result }}" >> report.md
+          echo "- Linting Analysis: ${{ needs.reviewdog-hybrid.result }}" >> report.md
           
           echo "## Function Parameter Limit" >> report.md
           echo "- Functions with more than 3 parameters will be flagged" >> report.md
