@@ -1,0 +1,12 @@
+linters:
+  disable:
+    - dupl
+    - gocritic
+    - govet
+  enable:
+    - golint
+    - staticcheck
+
+linters-settings:
+  golint:
+    min-confidence: 0.8
