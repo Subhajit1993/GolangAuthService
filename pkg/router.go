@@ -31,7 +31,7 @@ func (r GinEngine) addRoutes() GinEngine {
 	r.Use(sessions.Sessions("auth-session", store))
 	r.GET("/refresh-access-token", openid.GetAccessTokenRefreshToken)
 	r.POST("/email/login", general.Login)
-	r.POST("/email/Login", func(context *gin.Context) {
+	r.POST("/email/Test-Login", func(context *gin.Context) {
 		context.JSON(200, gin.H{
 			"message": "OK",
 		})
