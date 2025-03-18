@@ -63,8 +63,8 @@ jobs:
           echo "where f.getNumberOfParameters() > 3" >> custom-query.ql
           echo "select f, \"This function has more than 3 parameters.\"" >> custom-query.ql
           
-          # Run the query
-          "${{ steps.init.outputs.codeql-path }}/codeql" database analyze "${{ runner.temp }}/codeql_databases/go" \
+          # Run the query - use which to find codeql executable
+          codeql database analyze "${{ runner.temp }}/codeql_databases/go" \
             --format=sarif-latest \
             --output=custom-query-results.sarif \
             custom-query.ql
