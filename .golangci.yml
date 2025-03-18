@@ -1,0 +1,10 @@
+linters:
+  enable:
+    - revive
+
+linters-settings:
+  revive:
+    rules:
+      - name: argument-limit
+        severity: error
+        arguments: [ 3 ]

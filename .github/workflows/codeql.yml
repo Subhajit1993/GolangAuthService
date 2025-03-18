@@ -9,7 +9,7 @@ on:
     - cron: '29 14 * * 4'  # Weekly on Thursdays
 
 jobs:
-  # Use reviewdog directly to avoid golangci-lint config issues
+  # Use reviewdog with local golangci-lint config
   reviewdog:
     name: Lint with Reviewdog
     runs-on: ubuntu-latest
@@ -25,8 +25,19 @@ jobs:
         with:
           go-version: '1.21'
 
-      # Create a minimal golangci config just for the function params rule
+      # Instead of creating the config in the workflow, check if it exists first
+      - name: Check for golangci-lint config
+        id: check_config
+        run: |
+          if [ -f ".golangci.yml" ]; then
+            echo "config_exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "config_exists=false" >> $GITHUB_OUTPUT
+          fi
+
+      # Only create the config if it doesn't exist
       - name: Create golangci-lint config
+        if: steps.check_config.outputs.config_exists == 'false'
         run: |
           cat > .golangci.yml << 'EOL'
           linters:
@@ -45,11 +56,8 @@ jobs:
         uses: reviewdog/action-golangci-lint@v2
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          # For PR comments
           reporter: github-pr-review
-          # Fail on error to show in GitHub checks
           fail-on-error: true
-          # Skip config file - use default settings
           go_version: "1.21"
           golangci-lint-flags: "--config=.golangci.yml"
 
