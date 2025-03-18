@@ -39,10 +39,6 @@ jobs:
           config-file: ./.github/codeql/codeql-config.yml
           debug: true  # Enable debug output
 
-      - name: Put CodeQL on the path
-        run: |
-          echo "${{ steps.init.outputs.codeql-path }}" >> $GITHUB_PATH
-
       - name: Run Custom Query
         run: |
           # Create custom query file
@@ -63,8 +59,16 @@ jobs:
           echo "where f.getNumberOfParameters() > 3" >> custom-query.ql
           echo "select f, \"This function has more than 3 parameters.\"" >> custom-query.ql
           
-          # Run the query - use which to find codeql executable
-          codeql database analyze "${{ runner.temp }}/codeql_databases/go" \
+          # Debug: Find CodeQL executable
+          echo "Looking for CodeQL in:"
+          find /opt/hostedtoolcache/CodeQL -name codeql -type f | grep -v "/codeql/"
+          
+          # Use the absolute path to the CodeQL executable from the hostedtoolcache
+          CODEQL_PATH=$(find /opt/hostedtoolcache/CodeQL -name codeql -type f | grep -v "/codeql/" | head -1)
+          echo "Using CodeQL at: $CODEQL_PATH"
+          
+          # Run the query with the found path
+          "$CODEQL_PATH" database analyze "/home/runner/work/_temp/codeql_databases/go" \
             --format=sarif-latest \
             --output=custom-query-results.sarif \
             custom-query.ql
