@@ -5,6 +5,7 @@ on:
     branches: [ "master", "main" ]
   pull_request:
     branches: [ "master", "main" ]
+    types: [ opened, edited, reopened ]
   schedule:
     - cron: '29 14 * * 4'  # Weekly on Thursdays
 
@@ -60,48 +61,25 @@ jobs:
           go-version: '1.21'
 
       - name: GolangCI-Lint
-        uses: golangci/golangci-lint-action@v6
-        with:
-          version: v1.64
-
-  # Report Generation
-  report:
-    name: Generate Quality Report
-    runs-on: ubuntu-latest
-    needs: [ codeql-analyze, golangci-lint ]
-    if: always()
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Create report directory
-        run: mkdir -p reports
-
-      - name: Generate timestamp
-        id: timestamp
-        run: echo "timestamp=$(date +'%Y-%m-%d_%H-%M-%S')" >> $GITHUB_OUTPUT
-
-      - name: Generate Summary Report
+        id: lint
         run: |
-          echo "# Go Code Quality & Security Analysis Report" > reports/go-analysis-summary.md
-          echo "## Generated on: ${{ steps.timestamp.outputs.timestamp }}" >> reports/go-analysis-summary.md
-          echo "## Repository: ${{ github.repository }}" >> reports/go-analysis-summary.md
-          echo "## Branch: ${{ github.ref }}" >> reports/go-analysis-summary.md
-          echo "## Commit: ${{ github.sha }}" >> reports/go-analysis-summary.md
-          
-          echo "## Job Status" >> reports/go-analysis-summary.md
-          echo "- CodeQL Analysis: ${{ needs.codeql-analyze.result }}" >> reports/go-analysis-summary.md
-          echo "- GolangCI-Lint Analysis: ${{ needs.golangci-lint.result }}" >> reports/go-analysis-summary.md
-          
-          echo "## Recommendations" >> reports/go-analysis-summary.md
-          echo "- Review any failed jobs and address identified issues" >> reports/go-analysis-summary.md
-          echo "- Address security concerns identified by CodeQL" >> reports/go-analysis-summary.md
-          echo "- Refactor functions with more than 3 parameters to improve code maintainability" >> reports/go-analysis-summary.md
-          echo "- Consider using structs to group related parameters for complex functions" >> reports/go-analysis-summary.md
+          golangci-lint run --config ./.github/golangci.yml --out-format json > lint-report.json
 
-      - name: Archive reports
-        uses: actions/upload-artifact@v4
+      - name: Comment on PR with linting errors
+        uses: actions/github-script@v6
         with:
-          name: go-analysis-reports
-          path: reports/
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const lintReport = require('fs').readFileSync('lint-report.json', 'utf8');
+            const lintErrors = JSON.parse(lintReport);
+            const errors = lintErrors.linters.golangci-lint.issues.filter(issue => issue.severity === 'error');
+            if (errors.length > 0) {
+              const errorMessages = errors.map(error => `**${error.message}** at ${error.from} line ${error.line}`);
+              const commentBody = `### Linting Errors Found\n\nThe following errors were identified by GolangCI-Lint:\n\n${errorMessages.join('\n')}`;
+              github.issues.createComment({
+                issue_number: github.context.pullRequest.number,
+                owner: github.context.repo.owner,
+                repo: github.context.repo.repo,
+                body: commentBody
+              });
+            }
