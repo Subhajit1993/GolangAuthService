@@ -76,7 +76,7 @@ jobs:
         with:
           category: "/language:go"
 
-  # Report Generation (unchanged)
+  # Report Generation
   report:
     name: Generate Quality Report
     runs-on: ubuntu-latest
@@ -84,5 +84,35 @@ jobs:
     if: always()
 
     steps:
-    # Report generation steps remain unchanged
-    # ...
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Create report directory
+        run: mkdir -p reports
+
+      - name: Generate timestamp
+        id: timestamp
+        run: echo "timestamp=$(date +'%Y-%m-%d_%H-%M-%S')" >> $GITHUB_OUTPUT
+
+      - name: Generate Summary Report
+        run: |
+          echo "# Go Code Quality & Security Analysis Report" > reports/go-analysis-summary.md
+          echo "## Generated on: ${{ steps.timestamp.outputs.timestamp }}" >> reports/go-analysis-summary.md
+          echo "## Repository: ${{ github.repository }}" >> reports/go-analysis-summary.md
+          echo "## Branch: ${{ github.ref }}" >> reports/go-analysis-summary.md
+          echo "## Commit: ${{ github.sha }}" >> reports/go-analysis-summary.md
+          
+          echo "## Job Status" >> reports/go-analysis-summary.md
+          echo "- CodeQL Analysis: ${{ needs.codeql-analyze.result }}" >> reports/go-analysis-summary.md
+          
+          echo "## Recommendations" >> reports/go-analysis-summary.md
+          echo "- Review any failed jobs and address identified issues" >> reports/go-analysis-summary.md
+          echo "- Address security concerns identified by CodeQL" >> reports/go-analysis-summary.md
+          echo "- Refactor functions with more than 3 parameters to improve code maintainability" >> reports/go-analysis-summary.md
+          echo "- Consider using structs to group related parameters for complex functions" >> reports/go-analysis-summary.md
+
+      - name: Archive reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: go-analysis-reports
+          path: reports/
