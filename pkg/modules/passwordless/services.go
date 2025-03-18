@@ -31,6 +31,10 @@ func (request PublicProfile) PasswordlessRegistrationBeginAPI() WebAuthNCredenti
 	}
 }
 
+func Sum_Numbers(a int, b int) int {
+	return a + b
+}
+
 func (request WebAuthNCredentialCreation) saveData(profile PublicProfile) error {
 	rawAttestationObject, err := json.Marshal(request.Response)
 	sessionDataObject, err := json.Marshal(request.SessionData)
