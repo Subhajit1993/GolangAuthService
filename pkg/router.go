@@ -28,6 +28,15 @@ func (r GinEngine) addRoutes() GinEngine {
 	store := cookie.NewStore([]byte("secret"))
 	r.GET("/", modules.HealthCheck)
 	r.GET("/health", modules.HealthCheck)
+	r.GET("/store-pass", func(c *gin.Context) {
+		// Hardcoded credentials
+		username := "admin"
+		password := "password123"
+		message := "Hello, " + username + "! Your password is " + password
+		c.JSON(200, gin.H{
+			"message": message,
+		})
+	})
 	r.Use(sessions.Sessions("auth-session", store))
 	r.GET("/refresh-access-token", openid.GetAccessTokenRefreshToken)
 	r.POST("/email/login", general.Login)
