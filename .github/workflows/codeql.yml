@@ -24,8 +24,20 @@ jobs:
         uses: actions/setup-go@v4
         with:
           go-version: '1.21'
+          # This will skip the module download cache which might be corrupted
+          cache: false
 
-      # Instead of creating the config in the workflow, check if it exists first
+      # Clean go module cache to avoid extraction issues
+      - name: Clean Go module cache
+        run: |
+          go clean -modcache
+          go mod download
+
+      # Install dependencies to ensure they're properly downloaded
+      - name: Install dependencies
+        run: go mod tidy
+
+      # Check for golangci-lint config
       - name: Check for golangci-lint config
         id: check_config
         run: |
@@ -59,7 +71,8 @@ jobs:
           reporter: github-pr-review
           fail-on-error: true
           go_version: "1.21"
-          golangci-lint-flags: "--config=.golangci.yml"
+          # Run with -v for verbose output to help debug issues
+          golangci-lint-flags: "--config=.golangci.yml -v"
 
   # CodeQL Security Analysis for Go
   codeql-analyze:
