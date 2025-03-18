@@ -9,7 +9,7 @@ on:
     - cron: '29 14 * * 4'  # Weekly on Thursdays
 
 jobs:
-  # Use a hybrid approach - manual golangci-lint but reviewdog action
+  # Use a hybrid approach with existing config files
   reviewdog-hybrid:
     name: Lint with Reviewdog
     runs-on: ubuntu-latest
@@ -32,26 +32,10 @@ jobs:
           curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.55.2
           golangci-lint --version
 
-      # Create the golangci config with argument limit
-      - name: Create golangci-lint config
-        run: |
-          cat > .golangci.yml << 'EOL'
-          linters:
-            enable:
-              - revive
-          
-          linters-settings:
-            revive:
-              rules:
-                - name: argument-limit
-                  severity: error
-                  arguments: [3]
-          EOL
-
-      # Run golangci-lint and save output to file
+      # Run golangci-lint with existing config and save output to file
       - name: Run golangci-lint
         run: |
-          golangci-lint run --config=.golangci.yml --out-format=line-number > golangci-lint-output.txt || true
+          golangci-lint run --out-format=line-number > golangci-lint-output.txt || true
           cat golangci-lint-output.txt
 
       # Use reviewdog action to process the output file
@@ -66,7 +50,7 @@ jobs:
         run: |
           cat golangci-lint-output.txt | reviewdog -f=golangci-lint -name="golangci-lint" -reporter=github-pr-review -filter-mode=nofilter
 
-  # CodeQL Security Analysis for Go
+  # CodeQL Security Analysis for Go using existing config
   codeql-analyze:
     name: CodeQL Security Analysis
     runs-on: ubuntu-latest
@@ -81,6 +65,7 @@ jobs:
         uses: github/codeql-action/init@v3
         with:
           languages: go
+          config-file: ./codeql-config.yml
 
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v3
