@@ -31,6 +31,7 @@ jobs:
           go-version: '1.21'
 
       - name: Initialize CodeQL
+        id: init
         uses: github/codeql-action/init@v3
         with:
           languages: go
@@ -44,12 +45,35 @@ jobs:
 
       - name: Run Custom Query
         run: |
-          echo "import go" > custom-query.ql
+          # Create custom query file
+          echo "/**" > custom-query.ql
+          echo " * @name Functions with too many parameters" >> custom-query.ql
+          echo " * @description Functions with more than 3 parameters may be difficult to use." >> custom-query.ql
+          echo " * @kind problem" >> custom-query.ql
+          echo " * @problem.severity warning" >> custom-query.ql
+          echo " * @precision medium" >> custom-query.ql
+          echo " * @id go/functions-too-many-params" >> custom-query.ql
+          echo " * @tags maintainability" >> custom-query.ql
+          echo " *       readability" >> custom-query.ql
+          echo " */" >> custom-query.ql
+          echo "" >> custom-query.ql
+          echo "import go" >> custom-query.ql
           echo "" >> custom-query.ql
           echo "from Function f" >> custom-query.ql
           echo "where f.getNumberOfParameters() > 3" >> custom-query.ql
           echo "select f, \"This function has more than 3 parameters.\"" >> custom-query.ql
-          codeql database analyze --format=sarif-latest --output=results.sarif . custom-query.ql
+          
+          # Run the query
+          "${{ steps.init.outputs.codeql-path }}/codeql" database analyze "${{ runner.temp }}/codeql_databases/go" \
+            --format=sarif-latest \
+            --output=custom-query-results.sarif \
+            custom-query.ql
+
+      - name: Upload Custom Query Results
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: custom-query-results.sarif
+          category: "/language:go/custom"
 
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v3
