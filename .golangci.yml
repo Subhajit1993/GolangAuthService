@@ -1,179 +1,66 @@
-name: "Go Code Quality & Security Analysis with CodeQL and GolangCI-Lint"
+# .golangci.yml
+# Configuration file for golangci-lint
 
-on:
-  push:
-    branches: [ "master", "main" ]
-  pull_request:
-    branches: [ "master", "main" ]
-  schedule:
-    - cron: '29 14 * * 4'  # Weekly on Thursdays
+# Options for analysis running
+run:
+  # Default concurrency is a available CPU number
+  concurrency: 4
+  # Timeout for analysis, e.g. 30s, 5m, default is 1m
+  timeout: 5m
 
-jobs:
-  # CodeQL Security Analysis for Go
-  codeql-analyze:
-    name: CodeQL Security Analysis (Go)
-    runs-on: ubuntu-latest
-    permissions:
-      security-events: write
-      packages: read
-      actions: read
-      contents: read
+# List of linters to run
+linters:
+  disable-all: true
+  enable:
+    - errcheck
+    - gofmt
+    - goimports
+    - gosimple
+    - govet
+    - ineffassign
+    - staticcheck
+    - typecheck
+    - unused
+    - revive        # Modern replacement for golint
+    - misspell
+    - gosec
+    - bodyclose
+    - gocritic
 
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0  # Full git history for better analysis
+# Linter settings
+linters-settings:
+  revive: # Configuration for revive (replacement for golint)
+    rules:
+      - name: exported
+        arguments:
+          - "checkPrivateReceivers"
+          - "disableStutteringCheck"
+  govet:
+    check-shadowing: true
+  gocyclo:
+    min-complexity: 15
+  dupl:
+    threshold: 100
+  goconst:
+    min-len: 3
+    min-occurrences: 3
+  misspell:
+    locale: US
+  gosec:
+    excludes:
+      - G204  # Subprocess launching with variable (consider if this is appropriate)
 
-      - name: Set up Go
-        uses: actions/setup-go@v4
-        with:
-          go-version: '1.21'
-
-      - name: Initialize CodeQL
-        uses: github/codeql-action/init@v3
-        with:
-          languages: go
-          build-mode: autobuild
-          config-file: ./.github/codeql/codeql-config.yml
-          debug: true  # Enable debug output
-
-      - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@v3
-        with:
-          category: "/language:go"
-
-  # GolangCI-Lint Analysis with PR comments
-  golangci-lint:
-    name: GolangCI-Lint Analysis
-    runs-on: ubuntu-latest
-    if: always()
-    permissions:
-      # Required for PR comments and checks
-      contents: read
-      pull-requests: write
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Set up Go
-        uses: actions/setup-go@v4
-        with:
-          go-version: '1.21'
-
-      # Create the golangci-lint config file if needed
-      - name: Setup GolangCI-Lint Configuration
-        run: |
-          if [ ! -f .golangci.yml ]; then
-            cat > .golangci.yml << 'EOL'
-          # Default configuration for golangci-lint
-          run:
-            concurrency: 4
-            timeout: 5m
-          linters:
-            disable-all: true
-            enable:
-              - errcheck
-              - gofmt
-              - goimports
-              - gosimple
-              - govet
-              - ineffassign
-              - staticcheck
-              - typecheck
-              - unused
-              - revive
-              - misspell
-          linters-settings:
-            revive:
-              rules:
-                - name: exported
-          EOL
-          fi
-
-      - name: Run GolangCI-Lint
-        uses: golangci/golangci-lint-action@v6
-        with:
-          version: v1.64
-          # Output format for GitHub annotations
-          args: --out-format=colored-line-number,github-actions
-          # Add comments to PR
-          only-new-issues: true
-          # Use existing configuration or the one we created
-          skip-pkg-cache: true
-          skip-build-cache: true
-
-      # For PR runs, create reviewdog comments
-      - name: Run GolangCI-Lint with Reviewdog
-        if: github.event_name == 'pull_request'
-        uses: reviewdog/action-golangci-lint@v2
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          reporter: github-pr-review
-          level: warning
-          golangci-lint-flags: "--timeout=5m"
-
-  # Report Generation
-  report:
-    name: Generate Quality Report
-    runs-on: ubuntu-latest
-    needs: [ codeql-analyze, golangci-lint ]
-    if: always()
-    permissions:
-      contents: read
-      pull-requests: write
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Create report directory
-        run: mkdir -p reports
-
-      - name: Generate timestamp
-        id: timestamp
-        run: echo "timestamp=$(date +'%Y-%m-%d_%H-%M-%S')" >> $GITHUB_OUTPUT
-
-      - name: Generate Summary Report
-        run: |
-          echo "# Go Code Quality & Security Analysis Report" > reports/go-analysis-summary.md
-          echo "## Generated on: ${{ steps.timestamp.outputs.timestamp }}" >> reports/go-analysis-summary.md
-          echo "## Repository: ${{ github.repository }}" >> reports/go-analysis-summary.md
-          echo "## Branch: ${{ github.ref }}" >> reports/go-analysis-summary.md
-          echo "## Commit: ${{ github.sha }}" >> reports/go-analysis-summary.md
-          
-          echo "## Job Status" >> reports/go-analysis-summary.md
-          echo "- CodeQL Analysis: ${{ needs.codeql-analyze.result }}" >> reports/go-analysis-summary.md
-          echo "- GolangCI-Lint Analysis: ${{ needs.golangci-lint.result }}" >> reports/go-analysis-summary.md
-          
-          echo "## Recommendations" >> reports/go-analysis-summary.md
-          echo "- Review any failed jobs and address identified issues" >> reports/go-analysis-summary.md
-          echo "- Address security concerns identified by CodeQL" >> reports/go-analysis-summary.md
-          echo "- Refactor functions with more than 3 parameters to improve code maintainability" >> reports/go-analysis-summary.md
-          echo "- Consider using structs to group related parameters for complex functions" >> reports/go-analysis-summary.md
-
-      - name: Archive reports
-        uses: actions/upload-artifact@v4
-        with:
-          name: go-analysis-reports
-          path: reports/
-
-      # Add summary as PR comment if this is a PR
-      - name: Find PR Comment
-        uses: peter-evans/find-comment@v2
-        if: github.event_name == 'pull_request'
-        id: find-comment
-        with:
-          issue-number: ${{ github.event.pull_request.number }}
-          comment-author: 'github-actions[bot]'
-          body-includes: Go Code Quality & Security Analysis Report
-
-      - name: Create or Update PR Comment
-        uses: peter-evans/create-or-update-comment@v2
-        if: github.event_name == 'pull_request'
-        with:
-          comment-id: ${{ steps.find-comment.outputs.comment-id }}
-          issue-number: ${{ github.event.pull_request.number }}
-          body-file: reports/go-analysis-summary.md
-          edit-mode: replace
+# Issues configuration
+issues:
+  # Maximum issues count per one linter
+  max-issues-per-linter: 0
+  # Maximum count of issues with the same text
+  max-same-issues: 0
+  # Show only new issues
+  new: false
+  # Exclude specific issues by regular expression
+  exclude-rules:
+    - path: _test\.go
+      linters:
+        - gosec
+        - dupl

@@ -47,7 +47,6 @@ jobs:
   golangci-lint:
     name: GolangCI-Lint Analysis
     runs-on: ubuntu-latest
-    needs: [ codeql-analyze ]
     if: always()
     permissions:
       # Required for PR comments and checks
@@ -63,16 +62,57 @@ jobs:
         with:
           go-version: '1.21'
 
-      - name: GolangCI-Lint
+      # Create the golangci-lint config file if needed
+      - name: Setup GolangCI-Lint Configuration
+        run: |
+          if [ ! -f .golangci.yml ]; then
+            cat > .golangci.yml << 'EOL'
+          # Default configuration for golangci-lint
+          run:
+            concurrency: 4
+            timeout: 5m
+          linters:
+            disable-all: true
+            enable:
+              - errcheck
+              - gofmt
+              - goimports
+              - gosimple
+              - govet
+              - ineffassign
+              - staticcheck
+              - typecheck
+              - unused
+              - revive
+              - misspell
+          linters-settings:
+            revive:
+              rules:
+                - name: exported
+          EOL
+          fi
+
+      - name: Run GolangCI-Lint
         uses: golangci/golangci-lint-action@v6
         with:
           version: v1.64
           # Output format for GitHub annotations
-          args: --out-format=github-actions
-          # Save output to file for PR comment generation
+          args: --out-format=colored-line-number,github-actions
+          # Add comments to PR
           only-new-issues: true
-          # This will add GitHub annotations to the PR
+          # Use existing configuration or the one we created
+          skip-pkg-cache: true
+          skip-build-cache: true
+
+      # For PR runs, create reviewdog comments
+      - name: Run GolangCI-Lint with Reviewdog
+        if: github.event_name == 'pull_request'
+        uses: reviewdog/action-golangci-lint@v2
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
           reporter: github-pr-review
+          level: warning
+          golangci-lint-flags: "--timeout=5m"
 
   # Report Generation
   report:
